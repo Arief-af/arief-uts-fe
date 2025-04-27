@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arief UTS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+</head>
+
+<body class="bg-gray-50">
+  <!-- Navbar -->
+  <nav class="flex items-center justify-center p-4 bg-white shadow">
+    <div class="flex items-center gap-2 font-bold text-xl">
+      <span>Arief A.F</span><span class="text-gray-400">15-2022-262</span>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto p-8 grid md:grid-cols-2 gap-8">
+    <!-- Left: Product Images -->
+    <div>
+      <img id="preview-image" class="w-[400px] object-cover h-[400px]" src="https://placehold.co/240x240?text=No+Image">
+    </div>
+
+    <!-- Right: Product Info -->
+    <div>
+      <h2 class="text-2xl font-semibold mb-2">Add New Product</h2>
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-gray-600 text-sm">(All Field Required)</span>
+      </div>
+
+      <form id="uploadForm">
+        <div class="fieldset mb-5">
+          <legend class="fieldset-legend">Product Name</legend>
+          <input type="text" name="name" id="name" class="input px-6 my-2 w-full" required placeholder="Type here" />
+        </div>
+
+        <div class="fieldset mb-5">
+          <legend class="fieldset-legend">Product Price</legend>
+          <input type="text" name="price" id="price" class="input px-6 my-2 w-full" required placeholder="Type here" />
+        </div>
+
+        <div class="fieldset mb-5">
+          <legend class="fieldset-legend">Image</legend>
+          <input type="file" name="file" id="file" accept="image/*" class="input px-6 my-2 w-full" required />
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-black text-white rounded hover:bg-gray-800 mt-4">
+          Submit
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Products Section -->
+  <div class="max-w-7xl mx-auto p-8">
+    <div class="flex gap-8">
+      <div class="w-full">
+        <div class="border-b mb-4">
+          <button class="pb-2 border-b-2 border-black font-semibold">All Products</button>
+        </div>
+
+        <!-- Products Render Area -->
+        <section id="products-list" class="flex flex-wrap gap-4"></section>
+      </div>
+    </div>
+  </div>
+
+  <!-- External JavaScript -->
+  <script>
+    const form = document.getElementById("uploadForm");
+    const productList = document.getElementById("products-list");
+    const fileInput = document.getElementById("file");
+
+    // Show image preview
+    fileInput.addEventListener("change", function () {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          document.getElementById("preview-image").src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Upload Product
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById("name").value;
+      const price = document.getElementById("price").value;
+      const file = document.getElementById("file").files[0];
+
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("price", price);
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("http://arief.ariefaf.site/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) throw new Error("Upload failed");
+
+        alert("Product uploaded!");
+        form.reset();
+        document.getElementById("preview-image").src = "https://placehold.co/240x240?text=No+Image";
+        fetchProducts();
+      } catch (err) {
+        alert("Error uploading product: " + err.message);
+      }
+    });
+
+    // Fetch and Render Products
+    async function fetchProducts() {
+      try {
+        const res = await fetch("http://arief.ariefaf.site/products");
+        const products = await res.json();
+
+        productList.innerHTML = "";
+
+        products.forEach((product) => {
+          const div = document.createElement("div");
+          div.className = "rounded-lg p-5 shadow-md";
+          div.innerHTML = `
+        <img class="w-60 h-60 object-cover mb-2 rounded-lg" src="${product.url}" alt="${product.name}">
+        <h4 class="font-semibold">${product.name}</h4>
+        IDR ${product.price}
+      `;
+          productList.appendChild(div);
+        });
+      } catch (err) {
+        productList.innerHTML = "<p class='text-red-500'>Failed to load products.</p>";
+      }
+    }
+
+    fetchProducts();
+  </script>
+</body>
+
+</html>

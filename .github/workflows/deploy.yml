@@ -1,0 +1,52 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - master 
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY_ARIEF }}
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@13.239.254.74 << 'EOF'
+            echo "Connected to EC2"
+
+            cd /var/www/arief-uts-fe
+
+            echo "Pulling latest code..."
+            git fetch origin master
+            git reset --hard origin/master
+
+            echo "Installing dependencies..."
+            npm install
+
+            echo "Running unit tests..."
+            npm test
+
+            if [ $? -eq 0 ]; then
+              echo "Tests passed, starting deployment..."
+
+              echo "Restarting application..."
+
+              # Jika kamu pakai PM2:
+              pm2 reload all || pm2 start app.js --name arief-uts-fe
+
+              echo "Restarting Nginx..."
+              sudo systemctl restart nginx
+
+            else
+              echo "Tests failed. Deployment aborted!"
+              exit 1
+            fi
+          EOF
