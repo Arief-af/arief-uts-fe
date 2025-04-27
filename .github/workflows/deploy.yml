@@ -23,6 +23,9 @@ jobs:
             echo "Connected to EC2"
 
             cd /var/www/arief-uts-fe
+            ls
+            node -v
+            npm -v
 
             echo "Pulling latest code..."
             git fetch origin master
