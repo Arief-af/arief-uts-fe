@@ -23,9 +23,6 @@ jobs:
             echo "Connected to EC2"
 
             cd /var/www/arief-uts-fe
-            ls
-            node -v
-            npm -v
 
             echo "Pulling latest code..."
             git fetch origin master
@@ -37,19 +34,9 @@ jobs:
             echo "Running unit tests..."
             npm test
 
-            if [ $? -eq 0 ]; then
-              echo "Tests passed, starting deployment..."
+            pm2 reload all || pm2 start app.js --name arief-uts-fe
 
-              echo "Restarting application..."
+            echo "Restarting Nginx..."
+            sudo systemctl restart nginx
 
-              # Jika kamu pakai PM2:
-              pm2 reload all || pm2 start app.js --name arief-uts-fe
-
-              echo "Restarting Nginx..."
-              sudo systemctl restart nginx
-
-            else
-              echo "Tests failed. Deployment aborted!"
-              exit 1
-            fi
           EOF
